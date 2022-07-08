@@ -166,6 +166,24 @@ TEST_CASE("Parquet with external images") {
   };
 }
 
+TEST_CASE("Coco local file") {
+  auto image_files = std::vector<std::filesystem::path>();
+  for (auto& dentry : fs::directory_iterator(input_file)) {
+    image_files.emplace_back(dentry.path());
+  }
+
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_int_distribution<int32_t> dist(0, image_files.size() - 1);
+
+  BENCHMARK("Load images") {
+    auto idx = dist(mt);
+    auto filepath = image_files[idx].string();
+    fmt::print("Reading: {}\n", filepath);
+    ReadAll(filepath);
+  };
+}
+
 TEST_CASE("pet.xml") {
   auto l = OpenUri("pet_list.txt");
   auto size = l->GetSize().ValueOrDie();
