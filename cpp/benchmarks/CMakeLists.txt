@@ -47,3 +47,12 @@ target_link_libraries(
         lance_benchmark
         Catch2::Catch2
 )
+
+add_executable(scan scan.cc)
+target_link_libraries(
+        scan
+        lance
+        lance_benchmark
+        argparse
+        Catch2::Catch2
+)

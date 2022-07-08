@@ -14,11 +14,13 @@
 
 #include "bench_utils.h"
 
+#include <arrow/compute/exec/expression.h>
 #include <arrow/dataset/discovery.h>
 #include <arrow/dataset/file_parquet.h>
 #include <arrow/io/api.h>
 #include <arrow/util/string.h>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <lance/arrow/file_lance.h>
 
 #include <filesystem>
@@ -48,6 +50,15 @@ std::shared_ptr<::arrow::dataset::Scanner> OpenScanner(
   }
   if (filter.has_value()) {
     assert(scan_builder->Filter(filter.value()).ok());
+  }
+  std::vector<::arrow::compute::Expression> expressions;
+  for (auto& col : columns) {
+    expressions.emplace_back(::arrow::compute::field_ref(col));
+  }
+  auto status = scan_builder->Project(expressions, columns);
+  if (!status.ok()) {
+    fmt::print(stderr, "Failed to set project: columns={}, {}\n", columns, status.message());
+    assert(false);
   }
   assert(scan_builder->Project(columns).ok());
   assert(scan_builder->UseThreads().ok());
